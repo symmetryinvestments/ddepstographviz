@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/ddepstographviz
+ddepstographviz.so
+ddepstographviz.dylib
+ddepstographviz.dll
+ddepstographviz.a
+ddepstographviz.lib
+ddepstographviz-test-*
+*.exe
+*.o
+*.obj
+*.lst
