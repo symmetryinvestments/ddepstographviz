@@ -200,9 +200,9 @@ void toDOT(Out)(auto ref Out o, Node node, string[] stack) {
 	} else {
 		string n = node.name.replace('.', '_');
 		n = n == "graph" ? "_graph" : n;
-		formattedWrite(o, "subgraph cluster%s {\n", n);
+		formattedWrite(o, "subgraph cluster%-(%s_%) {\n", stack);
 		indent(o, stack.length + 1);
-		formattedWrite(o, "label=\"%s\";\n", n);
+		formattedWrite(o, "label=\"%s\";\n", node.name);
 		indent(o, stack.length + 1);
 		formattedWrite(o, "labeljust=l;\n");
 		foreach(sn; node.subNodes) {
