@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Robert burner Schadek"
+	],
+	"copyright": "Copyright © 2019, Symmetry Investments",
+	"description": "A program to turn dlang dep files to graphviz graphs",
+	"license": "GPL3",
+	"name": "ddepstographviz"
+}
