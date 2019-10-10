@@ -187,7 +187,7 @@ void print(Node node, int depth) {
 
 void toDOT(Out)(auto ref Out o, Node[] nodes) {
 	formattedWrite(o, "digraph Deps {\n");	
-	formattedWrite(o, "\tcompound=true;\n");
+	//formattedWrite(o, "\tcompound=true;\n");
  
 	foreach(n; nodes) {
 		toDOT(o, n, [n.name]);
@@ -206,8 +206,8 @@ void toDOT(Out)(auto ref Out o, Node node, string[] stack) {
 		n = n == "graph" ? "_graph" : n;
 		formattedWrite(o, "subgraph cluster%-(%s_%) {\n", 
 				stack.map!(it => it == "graph" ?  "_graph" : it));
-		indent(o, stack.length + 1);
-		formattedWrite(o, "compound=true;\n");
+		//indent(o, stack.length + 1);
+		//formattedWrite(o, "compound=true;\n");
 		indent(o, stack.length + 1);
 		formattedWrite(o, "rankdir=\"%s\";\n", 
 				stack.length % 2 == 0 ? "TB" : "LR");
@@ -241,10 +241,11 @@ void toDOTEdges(Out)(auto ref Out o, Node node, string[] stack,
 			.splitter(".")
 			.map!(it => it == "graph" ?  "_graph" : it)
 			.joiner("_"));
-		//to = to == "graph" ? "_graph" : to;
+		to = toNode.isCluster ? "cluster" ~ to : to;
+
 		string from = format("%-(%s_%)", 
 				stack.map!(it => it == "graph" ?  "_graph" : it));
-		from = node.subNodes.empty ? from : "cluster" ~ from;
+		from = node.isCluster ? "cluster" ~ from : from;
 
 		// No internal edges
 		auto f = node.subNodes
@@ -258,7 +259,7 @@ void toDOTEdges(Out)(auto ref Out o, Node node, string[] stack,
 		if(atLeastOnCluster) {
 			formattedWrite(o, "\t%s -> %s [%s %s, color=\"%s\"];\n", from, to,
 						node.isCluster ? format("ltail=%s", from) : "",
-						toNode.isCluster ? format("lhead=%s", from) : "",
+						toNode.isCluster ? format("lhead=%s", to) : "",
 						node.color
 					);
 		} else {
