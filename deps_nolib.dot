@@ -1,0 +1,155 @@
+digraph Deps {
+	subgraph clustergraphql {
+		rankdir="LR";
+		label="graphql";
+		labeljust=l;
+		color="cadetblue2";
+		graphql_visitor [label="visitor",color="darkolivegreen"];
+		graphql_tokenmodule [label="tokenmodule",color="darkviolet"];
+		graphql_ast [label="ast",color="darkseagreen1"];
+		graphql_parser [label="parser",color="floralwhite"];
+		graphql_lexer [label="lexer",color="darkgoldenrod"];
+		graphql_argumentextractor [label="argumentextractor",color="black"];
+		graphql_helper [label="helper",color="chartreuse3"];
+		graphql_builder [label="builder",color="gold3"];
+		graphql_directives [label="directives",color="darkseagreen2"];
+		graphql_astselector [label="astselector",color="cyan2"];
+		subgraph clustergraphql_schema {
+			rankdir="TB";
+			label="schema";
+			labeljust=l;
+			color="bisque4";
+			graphql_schema_types [label="types",color="darkseagreen"];
+			graphql_schema_helper [label="helper",color="forestgreen"];
+			graphql_schema_resolver [label="resolver",color="coral4"];
+			graphql_schema_typeconversions [label="typeconversions",color="darkgoldenrod2"];
+			graphql_schema_introspectiontypes [label="introspectiontypes",color="goldenrod1"];
+			graphql_schema_directives [label="directives",color="darkslategrey"];
+		}
+		graphql_traits [label="traits",color="antiquewhite"];
+		graphql_graphql [label="graphql",color="dodgerblue3"];
+		graphql_testschema [label="testschema",color="darkorange2"];
+		subgraph clustergraphql_validation {
+			rankdir="TB";
+			label="validation";
+			labeljust=l;
+			color="goldenrod4";
+			graphql_validation_querybased [label="querybased",color="dodgerblue"];
+			graphql_validation_schemabased [label="schemabased",color="chocolate3"];
+			graphql_validation_exception [label="exception",color="firebrick1"];
+		}
+		graphql_treevisitor [label="treevisitor",color="darkorange3"];
+		graphql_exception [label="exception",color="burlywood3"];
+		graphql_constants [label="constants",color="crimson"];
+		graphql_uda [label="uda",color="antiquewhite4"];
+	}
+	app [label="app",color="aquamarine1"];
+	testdata [label="testdata",color="antiquewhite3"];
+	testdata2 [label="testdata2",color="chartreuse2"];
+	testqueries [label="testqueries",color="darkslategray1"];
+
+
+	graphql_visitor -> graphql_tokenmodule[color="darkolivegreen", label="*", labeltooltip="package"]
+	graphql_tokenmodule -> graphql_visitor[color="darkviolet", label="*", labeltooltip="package"]
+	graphql_ast -> graphql_tokenmodule[color="darkseagreen1", label="*", labeltooltip="package"]
+	graphql_ast -> graphql_visitor[color="darkseagreen1", label="*", labeltooltip="package"]
+	graphql_parser -> graphql_ast[color="floralwhite", label="*", labeltooltip="package"]
+	graphql_parser -> graphql_tokenmodule[color="floralwhite", label="*", labeltooltip="package"]
+	graphql_parser -> graphql_lexer[color="floralwhite", label="*", labeltooltip="package"]
+	graphql_parser -> graphql_exception[color="floralwhite", label="*", labeltooltip="package"]
+	graphql_lexer -> graphql_tokenmodule[color="darkgoldenrod", label="*", labeltooltip="package"]
+	graphql_argumentextractor -> graphql_visitor[color="black", label="*", labeltooltip="package"]
+	graphql_argumentextractor -> graphql_ast[color="black", label="*", labeltooltip="package"]
+	graphql_argumentextractor -> graphql_builder[color="black", label="*", labeltooltip="FieldRangeItem"]
+	graphql_argumentextractor -> graphql_helper[color="black", label="*", labeltooltip="lexAndParse"]
+	graphql_helper -> graphql_ast[color="chartreuse3", label="*", labeltooltip="package"]
+	graphql_helper -> graphql_constants[color="chartreuse3", label="*", labeltooltip="package"]
+	graphql_helper -> graphql_lexer[color="chartreuse3", label="*", labeltooltip="package"]
+	graphql_helper -> graphql_parser[color="chartreuse3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_argumentextractor[color="gold3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_helper[color="gold3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_ast[color="gold3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_parser[color="gold3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_lexer[color="gold3", label="*", labeltooltip="package"]
+	graphql_builder -> graphql_directives[color="gold3", label="*", labeltooltip="package"]
+	graphql_directives -> graphql_ast[color="darkseagreen2", label="*", labeltooltip="package"]
+	graphql_directives -> graphql_helper[color="darkseagreen2", label="*", labeltooltip="package"]
+	graphql_directives -> graphql_astselector[color="darkseagreen2", label="*", labeltooltip="package"]
+	graphql_directives -> graphql_validation_exception[color="darkseagreen2", label="*", labeltooltip="package"]
+	graphql_directives -> graphql_argumentextractor[color="darkseagreen2", label="*", labeltooltip="package"]
+	graphql_astselector -> graphql_tokenmodule[color="cyan2", label="*", labeltooltip="package"]
+	graphql_astselector -> graphql_ast[color="cyan2", label="*", labeltooltip="package"]
+	graphql_astselector -> graphql_visitor[color="cyan2", label="*", labeltooltip="ConstVisitor"]
+	graphql_astselector -> graphql_helper[color="cyan2", label="*", labeltooltip="lexAndParse"]
+	graphql_astselector -> graphql_builder[color="cyan2", label="*", labeltooltip="findFragment"]
+	graphql_schema_types -> graphql_traits[color="darkseagreen", label="*", labeltooltip="package"]
+	graphql_schema_types -> graphql_constants[color="darkseagreen", label="*", labeltooltip="package"]
+	graphql_schema_types -> graphql_uda[color="darkseagreen", label="*", labeltooltip="package"]
+	graphql_schema_helper -> graphql_schema_types[color="forestgreen", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_schema_types[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_schema_typeconversions[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_helper[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_traits[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_constants[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_resolver -> graphql_graphql[color="coral4", label="*", labeltooltip="package"]
+	graphql_schema_typeconversions -> graphql_schema_types[color="darkgoldenrod2", label="*", labeltooltip="package"]
+	graphql_schema_typeconversions -> graphql_traits[color="darkgoldenrod2", label="*", labeltooltip="package"]
+	graphql_schema_typeconversions -> graphql_uda[color="darkgoldenrod2", label="*", labeltooltip="package"]
+	graphql_schema_typeconversions -> graphql_constants[color="darkgoldenrod2", label="*", labeltooltip="package"]
+	graphql_schema_introspectiontypes -> graphql_uda[color="goldenrod1", label="*", labeltooltip="package"]
+	graphql_traits -> graphql_uda[color="antiquewhite", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_argumentextractor[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_ast[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_builder[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_constants[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_directives[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_helper[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_schema_resolver[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_schema_types[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_tokenmodule[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_graphql -> graphql_uda[color="dodgerblue3", label="*", labeltooltip="package"]
+	graphql_testschema -> graphql_schema_directives[color="darkorange2", label="*", labeltooltip="package"]
+	graphql_testschema -> graphql_helper[color="darkorange2", label="*", labeltooltip="package"]
+	graphql_testschema -> graphql_uda[color="darkorange2", label="*", labeltooltip="package"]
+	clustergraphql_validation -> graphql_ast[ltail=clustergraphql_validation , color="goldenrod4", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_builder[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_helper[color="dodgerblue", label="*", labeltooltip="lexAndParse"]
+	graphql_validation_querybased -> graphql_visitor[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_validation_exception[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_lexer[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_parser[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_querybased -> graphql_treevisitor[color="dodgerblue", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_ast[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_builder[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_constants[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_visitor[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_schema_types[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_schema_helper[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_validation_exception[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_validation_schemabased -> graphql_helper[color="chocolate3", label="*", labeltooltip="lexAndParse"]
+	graphql_validation_schemabased -> graphql_testschema[color="chocolate3", label="*", labeltooltip="package"]
+	graphql_treevisitor -> graphql_ast[color="darkorange3", label="*", labeltooltip="package"]
+	graphql_treevisitor -> graphql_visitor[color="darkorange3", label="*", labeltooltip="package"]
+	graphql_treevisitor -> graphql_tokenmodule[color="darkorange3", label="*", labeltooltip="package"]
+	app -> graphql_parser[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_builder[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_lexer[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_ast[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_helper[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> clustergraphql_schema[ lhead=clustergraphql_schema, color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_traits[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_argumentextractor[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_graphql[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_testschema[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> testdata[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> testdata2[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_schema_introspectiontypes[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_uda[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> testqueries[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_validation_querybased[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_validation_schemabased[color="aquamarine1", label="*", labeltooltip="package"]
+	app -> graphql_schema_typeconversions[color="aquamarine1", label="*", labeltooltip="package"]
+	testdata -> graphql_testschema[color="antiquewhite3", label="*", labeltooltip="package"]
+	testdata -> graphql_helper[color="antiquewhite3", label="*", labeltooltip="returnTemplate"]
+	testdata2 -> graphql_schema_directives[color="chartreuse2", label="*", labeltooltip="package"]
+}
