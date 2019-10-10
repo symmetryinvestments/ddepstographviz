@@ -6,6 +6,9 @@ ddepstographviz takes the dmd output of the -deps flag and produces a file
 that the graphviz package (use fdp) can turn into a pretty, colorful picture
 of your app's dependencies.
 
+Pointing the mouse on the ```*``` on the edges displays what symbols are imported.
+package means that no selective imports where used.
+
 ## Usage
 
 1. Get dmd deps file -deps="deps.txt"
