@@ -6,7 +6,7 @@ d:
   - ldc
 
 script:
-  - dub test --compiler=${DC}
+  - dub test
 
 notifications:
   email: false
