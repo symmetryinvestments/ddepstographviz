@@ -1,7 +1,7 @@
 import std.stdio;
 
 import std.array : array, empty, front, popBack, popFront, replace;
-import std.algorithm.searching : find, startsWith;
+import std.algorithm.searching : canFind, find, startsWith;
 import std.algorithm.iteration : each, filter, map, joiner, splitter;
 import std.algorithm.sorting : sort;
 import std.algorithm.iteration : uniq;
@@ -14,19 +14,66 @@ import std.getopt;
 
 void main(string[] args) {
 	string[] toExcludeInput;
-	auto goRslt = getopt(args, "e|exclude", &toExcludeInput);
+	auto goRslt = getopt(args, 
+			"e|exclude", "Symbols to exclude, can be comma seperated",
+				&toExcludeInput,
+			"t|trimPackageInternal", 
+				"Remove edges between module inside the same package",
+				&_options.trimPackageInternal,
+			"d|trimPackageDownEdges", 
+				"Remove edges that point down the package tree",
+				&_options.trimPackageDownEdges,
+			"o|outputfilename", "The filename of the output file",
+				&_options.outputFileName,
+			"i|inputfilename", "The filename of the input file",
+				&_options.inputFileName
+			);
 
-	Exclude[] toExclude = toExcludeInput
+	if(goRslt.helpWanted) {
+		defaultGetoptPrinter(
+`Take dmd -deps output and turn it into pretty colorful pictures.
+After the output was written use the dot language (graphviz) tool fdp to turn
+the output file into a viewable picture.
+
+For example:
+$ ddepstographvic -e std,core,object -i deps.txt -o deps.dot
+$ fdp -T svg deps.dot > deps.svg
+
+Options:`,
+			goRslt.options);
+		return;
+	}
+
+	_options.toExclude = toExcludeInput
 		.map!(it => it.splitter(","))
 		.joiner
 		.map!(it => Exclude(it))
 		.array;
-	auto f = File("deps.txt", "r");
-	Line[] lines = splitInput(f.byLine, toExclude);
+	auto f = File(options.inputFileName, "r");
+	Line[] lines = splitInput(f.byLine);
 	//writefln("%(%s\n%)", lines);
 	Node[] nodes = linesToNodes(lines);
 	//print(nodes);
-	toDOT(stdout.lockingTextWriter, nodes);
+	if(options.outputFileName.empty) {
+		toDOT(stdout.lockingTextWriter, nodes);
+	} else {
+		auto of = File(options.outputFileName, "w");
+		auto ltw = of.lockingTextWriter();
+		toDOT(ltw, nodes);
+	}
+}
+
+struct Options {
+	string inputFileName = "deps.txt";
+	string outputFileName = "deps.dot";
+	bool trimPackageInternal = false;
+	bool trimPackageDownEdges = false;
+	Exclude[] toExclude;
+}
+
+private Options _options;
+@property ref const(Options) options() {
+	return _options;
 }
 
 struct Exclude {
@@ -76,7 +123,7 @@ Nullable!Line splitLine(char[] lineIn) {
 	return nullable(l);
 }
 
-bool mustBeExcluded(Line line, Exclude[] toExclude) {
+bool mustBeExcluded(Line line, const(Exclude[]) toExclude) {
 	foreach(it; toExclude) {
 		if(line.from.startsWith(it.seg)) {
 			return true;
@@ -88,7 +135,7 @@ bool mustBeExcluded(Line line, Exclude[] toExclude) {
 	return false;
 }
 
-Line[] splitInput(IRange)(IRange input, Exclude[] toExclude) {
+Line[] splitInput(IRange)(IRange input) {
 	import std.array : array;
 	import std.algorithm.iteration : map, splitter, filter;
 	return input
@@ -96,7 +143,7 @@ Line[] splitInput(IRange)(IRange input, Exclude[] toExclude) {
 		.map!((line) => splitLine(line))
 		.filter!(nullLine => !nullLine.isNull())
 		.map!(notNullLine => notNullLine.get())
-		.filter!(line => !line.mustBeExcluded(toExclude))
+		.filter!(line => !line.mustBeExcluded(options.toExclude))
 		.array;
 }
 
@@ -127,19 +174,29 @@ struct Edge {
 }
 
 class Node {
+	const(Node) parent;
 	string name;
 	string color;
 	Edge[] connections;
 	Node[] subNodes;
 	
 	this(Line l) {
+		this(l, null);
+ 	}
+
+	this(Line l, Node parent) {
 		this.name = l.from.front;
 		this.subNodes = new Node[0];
 		this.connections = [ Edge(l) ];
+		this.parent = parent;
  	}
 
 	@property bool isCluster() const {
 		return !this.subNodes.empty;
+	}
+
+	@property bool isOnRootLevel() const {
+		return parent is null;
 	}
 
 	void add(Edge con) {
@@ -236,7 +293,28 @@ void toDOTEdges(Out)(auto ref Out o, Node node, string[] stack,
 {
 	foreach(e; node.connections.filter!(con => !con.to.empty)) {
 		const(Node) toNode = graph.findNode(e.to);
-		enforce(toNode, format("Couldn't find '%s' in the graph", e.to));
+		if(toNode is null) {
+			writefln("Couldn't find '%s' in the graph", e.to);
+			continue;
+		}
+
+		// Exclude same level edges
+		const(Node) toParent = toNode.parent;
+		const(Node) fromParent = node.parent;
+		if(options.trimPackageInternal
+				&& toParent !is null
+				&& toParent is fromParent)
+		{
+			continue;
+		}
+
+		if(options.trimPackageDownEdges
+				&& fromParent !is null
+				&& fromParent.subNodes.containsNode(toNode))
+		{
+			continue;
+		}
+
 		string to = format("%s", e.to
 			.splitter(".")
 			.map!(it => it == "graph" ?  "_graph" : it)
@@ -255,23 +333,43 @@ void toDOTEdges(Out)(auto ref Out o, Node node, string[] stack,
 			continue;
 		}
 
+		const ltail = node.isCluster ? format("ltail=%s", from) : "";
+		const lhead = toNode.isCluster ? format("lhead=%s", to) : "";
+		const th = ltail.empty && lhead.empty 
+				? "[" 
+				: format("[%s %s, ", ltail, lhead);
+		const color = format("color=\"%s\", ", node.color);
+		const label = "label=\"*\", ";
+		const labeltooltip = canFind(e.fields, "package") 
+			? "labeltooltip=\"package\"" 
+			: format("labeltooltip=\"%-(%s\\n%)\"", e.fields);
+
 		const bool atLeastOnCluster = node.isCluster || toNode.isCluster;
-		if(atLeastOnCluster) {
-			formattedWrite(o, "\t%s -> %s [%s %s, color=\"%s\"];\n", from, to,
-						node.isCluster ? format("ltail=%s", from) : "",
-						toNode.isCluster ? format("lhead=%s", to) : "",
-						node.color
-					);
-		} else {
-			formattedWrite(o, "\t%s -> %s [color=\"%s\"];\n", from, to,
-					node.color);
-		}
+
+		formattedWrite(o, "\t%s -> %s%s%s%s%s]\n", from, to,
+				th, color, label, labeltooltip);
 	}
 	foreach(sn; node.subNodes) {
 		stack ~= sn.name;
 		toDOTEdges(o, sn, stack, graph);
 		stack.popBack();
 	}
+}
+
+bool containsNode(const(Node)[] graph, const(Node) toFind) {
+	if(toFind is null) {
+		return false;
+	}
+
+	foreach(it; graph) {
+		if(it is toFind) {
+			return true;
+		}
+		if(containsNode(it.subNodes, toFind)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 const(Node) findNode(const(Node)[] graph, string to) {
@@ -293,18 +391,18 @@ Node[] linesToNodes(Line[] lines) {
 	// The lines
 	lines
 		//.filter!(line => line.from.front == "ngd")
-		.each!(line => insertInto(line, nodes));
+		.each!(line => insertInto(line, nodes, null));
 
 	// Turn the connections into lines as well
 	lines
 		.map!(line => toLineSimple(line.to))
 		//.filter!(line => line.from.front == "ngd")
-		.each!(line => insertInto(line, nodes));
+		.each!(line => insertInto(line, nodes, null));
 
 	return nodes;
 }
 
-void insertInto(Line line, ref Node[] nodes) {
+void insertInto(Line line, ref Node[] nodes, Node parent) {
 	import std.array : back, popFront;
 	auto n = nodes.find!( (n, l) => n.name == l.from.front)(line);
 	if(!n.empty 
@@ -316,7 +414,7 @@ void insertInto(Line line, ref Node[] nodes) {
 		}
 		return;
 	} else if(n.empty || line.from.length == 1) {
-		nodes ~= new Node(line);
+		nodes ~= new Node(line, parent);
 		nodes.back.color = nextColor();
 		//writeln(nodes.back);
 		return;
@@ -325,7 +423,7 @@ void insertInto(Line line, ref Node[] nodes) {
 		//writefln("Before %s", c);
 		c.from.popFront();
 		//writefln("After  %s", c);
-		insertInto(c, n.front.subNodes);
+		insertInto(c, n.front.subNodes, n.front);
 		return;
 	}
 	assert(false, format("%s", line));
