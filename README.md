@@ -46,7 +46,8 @@ point down in the module tree.
 $ dub run ddepstographviz -- -i deps.txt -o deps.dot -e std,vibe,mir,nullablestore,core,object,diet,taggedalgebraic,taggedunion,eventcore,fixedsizearray -t true -d true
 ```
 
-![Image of all deps without libs and less internal edges](https://github.com/symmetryinvestments/ddepstographviz/raw/master/deps_nolib_package_internal.png "No libraries and no package internal edges")
+![Image of all deps without libs and less internal edges](https://github.com/symmetryinvestments/ddepstographviz/raw/master/deps_nolib_no_package_internal.png "No libraries and no package internal edges")
+
 
 
 
