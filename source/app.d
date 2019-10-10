@@ -129,12 +129,16 @@ class Node {
 	string name;
 	Edge[] connections;
 	Node[] subNodes;
-
+	
 	this(Line l) {
 		this.name = l.from.front;
 		this.subNodes = new Node[0];
 		this.connections = [ Edge(l) ];
  	}
+
+	@property bool isCluster() const {
+		return this.subNodes.empty;
+	}
 
 	void add(Edge con) {
 		auto f = this.connections.find!( (o, n) => o.to == n.to)(con);
@@ -193,14 +197,13 @@ void toDOT(Out)(auto ref Out o, Node[] nodes) {
 
 void toDOT(Out)(auto ref Out o, Node node, string[] stack) {
 	indent(o, stack.length);
-	if(node.subNodes.empty) {
-		formattedWrite(o, "%-(%s_%) [label=\"%s\"];\n", 
-				stack.map!(it => it == "graph" ?  "_graph" : it),
-				node.name);
-	} else {
+	if(node.isCluster) {
 		string n = node.name.replace('.', '_');
 		n = n == "graph" ? "_graph" : n;
 		formattedWrite(o, "subgraph cluster%-(%s_%) {\n", stack);
+		indent(o, stack.length + 1);
+		formattedWrite(o, "rankdir=\"%s\";\n", 
+				stack.length % 2 == 0 ? "TB" : "LR");
 		indent(o, stack.length + 1);
 		formattedWrite(o, "label=\"%s\";\n", node.name);
 		indent(o, stack.length + 1);
@@ -212,6 +215,10 @@ void toDOT(Out)(auto ref Out o, Node node, string[] stack) {
 		}
 		indent(o, stack.length);
 		formattedWrite(o, "}\n");
+	} else {
+		formattedWrite(o, "%-(%s_%) [label=\"%s\"];\n", 
+				stack.map!(it => it == "graph" ?  "_graph" : it),
+				node.name);
 	}
 }
 
