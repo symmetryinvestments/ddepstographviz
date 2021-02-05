@@ -88,7 +88,7 @@ struct Exclude {
 
 struct Line {
 	string[] from;
-	string visability;
+	string visibility;
 	string to;
 	string[] what;
 }
@@ -115,7 +115,7 @@ Nullable!Line splitLine(char[] lineIn) {
 	}
 	Line l;
 	l.from = sp.pop().strip().dropAfterSpace().split('.');
-	l.visability = sp.pop().strip;
+	l.visibility = sp.pop().strip;
 	l.to = sp.pop().strip().dropAfterSpace();
 	if(!sp.empty) {
 		l.what = sp.front.split(',');
