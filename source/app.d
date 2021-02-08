@@ -116,6 +116,9 @@ Nullable!Line splitLine(char[] lineIn) {
 	Line l;
 	l.from = sp.pop().strip().dropAfterSpace().split('.');
 	l.visibility = sp.pop().strip;
+	if(!canFind(["private", "public", "protected"], l.visibility)) {
+		return Nullable!(Line).init;
+	}
 	l.to = sp.pop().strip().dropAfterSpace();
 	if(!sp.empty) {
 		l.what = sp.front.split(',');
